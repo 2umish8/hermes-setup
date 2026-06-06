@@ -1,7 +1,7 @@
 ---
 name: github-repo-management
 description: "Clone/create/fork repos; manage remotes, releases."
-version: 1.1.0
+version: 1.2.0
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -276,6 +276,114 @@ curl -s -X PUT \
 
 ## 6. Branch Protection
 
+Set up protection rules that prevent direct pushes, force pushes, or un-reviewed merges on critical branches (typically `main`).
+
+### Recommended: gh api (cleaner, uses existing gh auth)
+
+```bash
+# Derive owner/repo from remote (works for HTTPS and SSH)
+REMOTE_URL=$(git remote get-url origin)
+OWNER_REPO=$(echo "$REMOTE_URL" | sed -E 's|.*github\\.com[:/]||; s|\\.git$||')
+
+# Full protection: PR required + 1 review + dismiss stale + enforce admins
+gh api -X PUT \
+  repos/$OWNER_REPO/branches/main/protection \
+  --input - <<'EOF'
+{
+  "required_status_checks": null,
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": false
+  },
+  "restrictions": null,
+  "required_linear_history": false,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "block_creations": false,
+  "required_conversation_resolution": true,
+  "lock_branch": false,
+  "allow_fork_syncing": false
+}
+EOF
+```
+
+Field reference (all body params for `PUT /repos/{owner}/{repo}/branches/{branch}/protection`):
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `required_status_checks` | object \| null | CI checks that must pass. `null` = disable |
+| `enforce_admins` | bool | Apply protection to admins too |
+| `required_pull_request_reviews` | object \| null | PR review requirements |
+| `restrictions` | object \| null | Restrict who can push (org-owned repos only) |
+| `required_linear_history` | bool | Require linear Git history (no merge commits) |
+| `allow_force_pushes` | bool \| null | Permit force pushes |
+| `allow_deletions` | bool | Allow deleting the protected branch |
+| `block_creations` | bool | Block new branch creation matching this pattern |
+| `required_conversation_resolution` | bool | Require all PR thread discussions resolved |
+| `lock_branch` | bool | Make branch read-only (no pushes or merges) |
+| `allow_fork_syncing` | bool | Allow pulling from upstream when locked |
+
+### Common Protection Profiles
+
+**Production branch (`main`) — strict:**
+- PR required + 1 approving review + dismiss stale reviews
+- Enforce admins
+- No force pushes, no deletions
+- Conversation resolution required
+- Source branch restriction (see pitfall below)
+
+**Release branch — moderate:**
+- PR required + 1 review
+- No enforce admins (allows hotfix bypass)
+- Force pushes blocked
+
+**Develop branch — light:**
+- PR required (optional, 0 approving reviews = merge button only)
+- Conversation resolution
+- Force pushes allowed, deletions allowed
+
+### Verification
+
+After setting protection, verify it took effect:
+
+```bash
+gh api repos/$OWNER_REPO/branches/main/protection --jq '{
+  pr_reviews: .required_pull_request_reviews.required_approving_review_count,
+  dismiss_stale: .required_pull_request_reviews.dismiss_stale_reviews,
+  enforce_admins: .enforce_admins.enabled,
+  force_push: .allow_force_pushes.enabled,
+  deletions: .allow_deletions.enabled,
+  conversation_resolution: .required_conversation_resolution.enabled
+}'
+```
+
+### ⚠️ Critical Pitfall: Source Branch Restriction
+
+If you want to restrict **which source branches can merge** into the protected branch (e.g. "only `dev` can merge into `main`"), **this is NOT available through the REST API**.
+
+- The `restrict_source_branches` + `source_branches` fields are undocumented / rejected by the API
+- This feature is **UI-only**: Settings → Branches → branch name → Edit → check "Restrict source branches" → enter allowed branches
+- Direct link (for your own repo): `https://github.com/<owner>/<repo>/settings/branches/<branch>`
+
+There is no workaround via Rulesets either — the Rulesets API (`POST /repos/{owner}/{repo}/rulesets`) with the `pull_request` rule type does not support source branch restriction. If you need this, the user must click it in the GitHub UI.
+
+### Rulesets vs Classic Protection (avoid conflict)
+
+GitHub has two protection systems. **Don't mix both on the same branch** — they can conflict:
+
+- **Classic branch protection** (`PUT /repos/.../branches/branch/protection`): simpler, what's documented above
+- **Rulesets** (`POST /repos/.../rulesets`): newer, supports more rule types but has stricter defaults
+
+The `update` rule type in Rulesets blocks ALL updates (pushes, merges) unless bypass actors are configured. If you need Rulesets for advanced rules (commit message patterns, branch name patterns), remove classic protection first:
+
+```bash
+gh api repos/$OWNER_REPO/branches/main/protection --method DELETE
+```
+
+### Fallback: curl (when `gh` is not available)
+
 ```bash
 # View current protection
 curl -s \
@@ -287,15 +395,18 @@ curl -s -X PUT \
   -H "Authorization: token $GITHUB_TOKEN" \
   https://api.github.com/repos/$OWNER/$REPO/branches/main/protection \
   -d '{
-    "required_status_checks": {
-      "strict": true,
-      "contexts": ["ci/test", "ci/lint"]
-    },
-    "enforce_admins": false,
+    "required_status_checks": null,
+    "enforce_admins": true,
     "required_pull_request_reviews": {
-      "required_approving_review_count": 1
+      "required_approving_review_count": 1,
+      "dismiss_stale_reviews": true,
+      "require_code_owner_reviews": false
     },
-    "restrictions": null
+    "restrictions": null,
+    "required_linear_history": false,
+    "allow_force_pushes": false,
+    "allow_deletions": false,
+    "required_conversation_resolution": true
   }'
 ```
 

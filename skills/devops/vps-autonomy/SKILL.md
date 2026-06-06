@@ -67,6 +67,7 @@ Schedule via cronjob tool with schedule="0 6 * * *".
 ## Related Skills
 
 - `firecrawl` — uses `--agent hermes --agent openhands` (not `--all`) to avoid polluting unused agent dirs
+- `vps-dashboard` — web UI exposing Hermes cron + system stats (port 3333, FastAPI/HTMX)
 - Monthly cleanup via `Jerry's Cleanup` cron (audits skills, memory, logs)
 
 ## References
