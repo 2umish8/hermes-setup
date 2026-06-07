@@ -17,3 +17,5 @@ Convention de recherche: Toujours effectuer les recherches web en anglais, puis 
 VPS autonomy: 100% autonome. Safety bloque 2× → stop looping, donner config key + fix. User veut approvals.mode: auto + git backup.
 §
 Caddy v2.6.2 is the active reverse proxy on this VPS — owns 80/443, auto Let's Encrypt SSL, config at /etc/caddy/Caddyfile with admin off (needs restart, not reload). Nginx installed but unused. Never suggest Nginx/certbot without checking what's on 80/443 first.
+§
+**Correction**: The memory directory path is `~/.hermes/memory/`, not `~/.hermes/memories/`. The backup script should use the correct path.

@@ -1,0 +1,91 @@
+{
+  "jobs": [
+    {
+      "id": "540da09011aa",
+      "name": "hermes-setup-backup",
+      "prompt": "# Backup Hermes setup\n# Copy files\nrsync -av --delete --exclude='.git/' --exclude='*.log' ~/.hermes/skills/ /home/hermes/hermes-setup/skills/\nrsync -av --delete --exclude='.git/' ~/.hermes/memory/ /home/hermes/hermes-setup/memory/\nrsync -av --delete --exclude='.git/' ~/.hermes/cron/ /home/hermes/hermes-setup/cron/\ncp ~/.hermes/config.yaml /home/hermes/hermes-setup/config/\n\n# Git operations \u2014 always on main\ncd /home/hermes/hermes-setup\ngit checkout main\ngit add .\nif ! git diff-index --quiet HEAD --; then\n  git commit -m \"Automated backup: $(date)\"\n  git push origin main\nfi",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 */12 * * *",
+        "display": "0 */12 * * *"
+      },
+      "schedule_display": "0 */12 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 3
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-05T20:50:30.989202+00:00",
+      "next_run_at": "2026-06-08T00:00:00+00:00",
+      "last_run_at": "2026-06-07T00:00:18.163038+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6671390917",
+        "chat_name": "Mischael Rad",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": "/home/hermes/hermes-setup",
+      "profile": null
+    },
+    {
+      "id": "cc482a2535e8",
+      "name": "Uptime monitoring - hermes & code subdomains",
+      "prompt": "Monitoring des sous-domaines hermes.dev.mowtif.com et code.dev.mowtif.com",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "healthcheck.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "interval",
+        "minutes": 15,
+        "display": "every 15m"
+      },
+      "schedule_display": "every 15m",
+      "repeat": {
+        "times": null,
+        "completed": 100
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-06T09:18:29.250123+00:00",
+      "next_run_at": "2026-06-07T12:13:12.983868+00:00",
+      "last_run_at": "2026-06-07T11:58:12.983868+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6671390917",
+        "chat_name": "Mischael Rad",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    }
+  ],
+  "updated_at": "2026-06-07T12:00:12.497849+00:00"
+}
