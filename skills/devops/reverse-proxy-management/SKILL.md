@@ -23,10 +23,10 @@ trigger: |
 
 ## Règle d'or : Auditer avant d'agir
 
-**BEFORE** installer ou modifier un serveur web, vérifier ce qui écoute sur 80/443 :
+**BEFORE** installer ou modifier un serveur web, vérifier ce qui écoute sur 80/443 **ET** les ports cibles potentiels (3000, 8080, etc.) :
 
 ```bash
-sudo ss -tlnp | grep -E ':(80|443) '
+sudo ss -tlnp | grep -E ':(80|443|3000|8080|517[3-9]|5180) '
 ```
 
 **Ne jamais** installer Nginx si Caddy est déjà actif — ils entrent en conflit sur les ports.
@@ -106,9 +106,14 @@ Si Nginx est absolument nécessaire :
 
 ---
 
-## Monitoring des endpoints exposés
-
-Une fois les sous-domaines en place, ajouter un healthcheck automatisé :
+### Monitoring des agents (agy, fcc-claude, copilot)
+Une fois les sous-domaines en place, ajouter un healthcheck automatisé. Le script de monitoring `~/.hermes/scripts/healthcheck.sh` doit contenir les endpoints :
+- `agy-global.dev.mowtif.com|200`
+- `agy-mowtif.dev.mowtif.com|200`
+- `fcc-global.dev.mowtif.com|200`
+- `fcc-mowtif.dev.mowtif.com|200`
+- `copilot-global.dev.mowtif.com|200`
+- `copilot-mowtif.dev.mowtif.com|200`
 
 1. Placer un script dans `~/.hermes/scripts/` (voir `scripts/healthcheck.sh` dans ce skill)
 2. Créer un cron Hermes en no_agent=true toutes les 15 min :
@@ -123,11 +128,14 @@ Une fois les sous-domaines en place, ajouter un healthcheck automatisé :
 
 ### Ajouter des endpoints au monitoring
 
-Éditer `healthcheck.sh` et ajouter une ligne au tableau `ENDPOINTS` :
+Éditer `~/.hermes/scripts/healthcheck.sh` (utilisé par le cron) et ajouter une ligne au tableau `ENDPOINTS` :
 ```
-"mon-sous-domaine.dev.mowtif.com/chemin|200"
+"mon-sous-domaine.dev.mowtif.com|200"
 ```
-Format : `"host/path|expected_http_code"`. Le script accepte 200 ou 302 comme OK.
+Format : `"host|expected_http_code"`. Le script vérifiera `https://$host` et attendra `expected_http_code`.
+
+### Mise à jour des scripts
+Si vous modifiez `~/.hermes/scripts/healthcheck.sh`, vérifiez qu'il est bien accessible par le job cron. Utilisez toujours des chemins relatifs à `~/.hermes/scripts/` pour les cron jobs `no_agent`.
 
 ---
 
@@ -138,9 +146,10 @@ Format : `"host/path|expected_http_code"`. Le script accepte 200 ou 302 comme OK
 ---
 
 ## Pitfalls
-
+### Pitfalls
 - **Caddy occupe 80/443 en premier** — ne pas installer Nginx sans vérifier. Ils ne peuvent pas coexister sur les mêmes ports.
 - **`admin off` dans le Caddyfile** → `caddy reload` échoue. Utiliser `systemctl restart`.
+- **Conflits de port** — si un sous-domaine retourne 502, vérifier quel service écoute réellement sur le port cible avec `sudo ss -tlnp | grep :<port>`. Le service a pu crasher ou changer de port.
 - **code-server besoin du Host header** — sans `header_up Host`, la redirection de login peut casser.
 - **Let's Encrypt rate limits** — Caddy gère ça automatiquement ; certbot manuel peut les atteindre si lancé trop souvent.
 - **Next.js en dev mode peut rendre 500** — erreur de config (env vars manquantes), pas un problème de reverse proxy.

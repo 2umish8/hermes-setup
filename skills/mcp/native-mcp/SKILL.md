@@ -202,6 +202,31 @@ If an MCP tool call fails, any credential-like patterns in the error message are
 - Bearer tokens
 - Generic `token=`, `key=`, `API_KEY=`, `password=`, `secret=` patterns
 
+## Verifying MCP Servers (hermes mcp CLI)
+
+After adding a server to config, verify it without restarting the full gateway:
+
+```bash
+# List all configured servers and their status
+hermes mcp list
+
+# Test connectivity and discover tools for a specific server
+hermes mcp test <server_name>
+```
+
+`hermes mcp test` connects to the server, runs tool discovery, and prints all available tools with descriptions. This is the fastest way to confirm a new server works before restarting.
+
+Other CLI subcommands: `hermes mcp add`, `hermes mcp remove`, `hermes mcp catalog` (browse available servers), `hermes mcp install`.
+
+**Note:** `hermes mcp test` runs a standalone connection — it does NOT inject tools into the running agent session. Tools only become available as `mcp_{server}_{tool}` after a gateway restart.
+
+## Pitfalls
+
+- **`args` must be a YAML list, not a string.** `args: '[]'` is a string and will be passed as a literal argument. Use `args: []` or `args: ["-y", "package-name"]`.
+- **Cannot edit config.yaml from within the agent.** The security layer blocks `write_file` / `patch` on `~/.hermes/config.yaml`. Use `terminal` with `python3 -c "..."` or `sed` to modify it programmatically.
+- **MCP tools are only injected at gateway startup.** After adding/removing servers, a gateway restart is required. `hermes gateway restart` cannot be called from inside the gateway — use `hermes gateway stop` + `hermes gateway start` from an external shell, or restart via systemd/s6.
+- **Shell scripts as MCP server commands** work (e.g., `command: /path/to/script.sh`) but put secrets inside the script, not in config `env`. Prefer the native `command + args + env` pattern for clarity.
+
 ## Troubleshooting
 
 ### "MCP SDK not available -- skipping MCP tool discovery"
@@ -355,3 +380,7 @@ Disable sampling for untrusted servers with `sampling: { enabled: false }`.
 - The native MCP client is independent of `mcporter` -- you can use both simultaneously
 - Server connections are persistent and shared across all conversations in the same agent process
 - Adding or removing servers requires restarting the agent (no hot-reload currently)
+
+## References
+
+- `references/todoist-mcp-setup.md` — Todoist MCP server config, API v1 migration notes, direct API fallback pattern

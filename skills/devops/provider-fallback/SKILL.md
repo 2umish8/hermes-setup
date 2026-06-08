@@ -62,21 +62,40 @@ provider plugin:
 ## Testing API Keys Before Committing
 
 Always test keys with `curl` before adding to config. A non-working key in the
-chain blocks the fallback at that tier.
+chain blocks the fallback at that tier. For Gemini specifically, see
+[references/gemini-api-keys.md](references/gemini-api-keys.md) — different API format
+and distinct error codes (403 ≠ invalid key).
 
 ```bash
-# Test chat completions
+# Test chat completions (OpenAI-compatible providers)
 curl -s -X POST https://api.mistral.ai/v1/chat/completions \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"mistral-small-latest","messages":[{"role":"user","content":"hi"}]}'
 
-# Test models list (simpler endpoint)
+# Test models list (simpler endpoint — works for OpenAI-compatible)
 curl -s https://api.groq.com/openai/v1/models \
   -H "Authorization: Bearer $KEY"
+
+# Test Gemini (different format — key as query param, own REST API)
+curl -s "https://generativelanguage.googleapis.com/v1beta/models?key=${KEY}" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('models',[])), 'models') if 'models' in d else print('ERR:', d['error']['message'][:80])"
 ```
 
 ## Pitfalls
+
+### NEVER replace an existing API key without explicit confirmation
+**Critical.** When the user provides a new API key for a provider that already has one configured in `.env`, the default action is to **ADD** it as a second credential — NOT replace the existing one. The user may have multiple accounts (free + Pro, personal + work) with different expiration dates.
+
+**Workflow:**
+1. Check if a key already exists: `grep PROVIDER ~/.hermes/.env`
+2. If one exists, **ask** before replacing. Default: add as a new env var (e.g. `GEMINI_PRO_API_KEY` alongside `GOOGLE_API_KEY`)
+3. To make Hermes use the new key, either:
+   - Add it to the credential pool via `hermes auth add`
+   - Or configure `model.api_key` in config.yaml to point to the new env var
+4. Track each key's expiration separately with cron jobs
+
+**Recovery if you accidentally overwrite:** Check `~/.hermes/state-snapshots/` for recent backups of `.env`. These are created before Hermes updates and contain the full key values.
 
 ### api_key vs api_key_env
 In `custom_providers`, the field is **`api_key`** (NOT `api_key_env`).
@@ -124,6 +143,11 @@ The config file has a YAML syntax error or an unexpected type (e.g. a string whe
 `HTTP 403: error code: 1010` = API key expired or revoked.
 Regenerate at https://console.groq.com/keys.
 
+### Gemini Error 403 vs 400
+`HTTP 403 PERMISSION_DENIED "unregistered callers"` = API not enabled in GCP project (key may be valid). Enable at https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com
+`HTTP 400 INVALID_ARGUMENT "API key not valid"` = key is wrong/revoked. Regenerate at https://console.cloud.google.com/apis/credentials
+Full diagnostics: [references/gemini-api-keys.md](references/gemini-api-keys.md)
+
 ### Config File is Protected
 `config.yaml` cannot be edited with `patch` or `write_file` tools — use the
 `terminal` tool with Python YAML dump:
@@ -164,4 +188,6 @@ PRIMARY:  Groq (llama-3.1-8b-instant)        ← Fastest free
 ## See Also
 
 - [Groq model reference](references/groq-models.md) — model IDs, speeds, rate limits, pricing
+- [Gemini API key diagnostics](references/gemini-api-keys.md) — error codes 403 vs 400, test commands, GCP setup
+- [Credential management](references/credential-management.md) — multiple keys per provider, expiration tracking, .env recovery
 - [Hermes fallback docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/fallback-providers)

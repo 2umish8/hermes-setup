@@ -20,4 +20,5 @@ This skill governs all interactions with the Mowtif productivity ecosystem. Use 
 
 ## Pitfalls
 - **Environment:** Always verify Turbo configuration in `turbo.json` before triggering builds.
+- **Service Persistence:** Many apps in the monorepo lack persistent supervision (systemd/PM2). If an app is unreachable, verify the process is running; if not, suggest configuring systemd to avoid recurrent outages.
 - **Ambiguity:** If a requirement is unclear, do not proceed; use `clarify` to ask the Architect for details.

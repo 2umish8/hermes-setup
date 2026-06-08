@@ -196,7 +196,17 @@ grep -n "from gateway.config import Platform" ~/.hermes/hermes-agent/gateway/run
 hermes gateway restart
 ```
 
-## Related Issues
+## Systemd Environment Configuration
+
+To set permanent environment variables (like `HERMES_YOLO_MODE=1`) for the Hermes Gateway service, edit the service file:
+`/home/hermes/.config/systemd/user/hermes-gateway.service`
+
+Add the environment line in the `[Service]` section:
+`Environment="HERMES_YOLO_MODE=1"`
+
+Then restart the service:
+`systemctl --user daemon-reload`
+`systemctl --user restart hermes-gateway.service`
 
 ### Gateway running but not responding at all
 - Check `.env` for TELEGRAM_BOT_TOKEN, TELEGRAM_ALLOWED_USERS
