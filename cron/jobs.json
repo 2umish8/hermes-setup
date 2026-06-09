@@ -20,15 +20,15 @@
       "schedule_display": "0 */12 * * *",
       "repeat": {
         "times": null,
-        "completed": 6
+        "completed": 7
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-06-05T20:50:30.989202+00:00",
-      "next_run_at": "2026-06-09T12:00:00+00:00",
-      "last_run_at": "2026-06-08T12:00:52.635348+00:00",
+      "next_run_at": "2026-06-10T00:00:00+00:00",
+      "last_run_at": "2026-06-09T00:00:22.399410+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -235,15 +235,15 @@
       "schedule_display": "every 10m",
       "repeat": {
         "times": null,
-        "completed": 169
+        "completed": 241
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-06-07T18:56:34.369950+00:00",
-      "next_run_at": "2026-06-09T00:01:02.001242+00:00",
-      "last_run_at": "2026-06-08T23:51:02.001242+00:00",
+      "next_run_at": "2026-06-09T12:03:36.329840+00:00",
+      "last_run_at": "2026-06-09T11:53:36.329840+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -311,15 +311,15 @@
       "schedule_display": "*/1 * * * *",
       "repeat": {
         "times": null,
-        "completed": 1211
+        "completed": 1925
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-06-08T03:25:42.492928+00:00",
-      "next_run_at": "2026-06-09T00:01:00+00:00",
-      "last_run_at": "2026-06-09T00:00:02.483917+00:00",
+      "next_run_at": "2026-06-09T12:01:00+00:00",
+      "last_run_at": "2026-06-09T12:00:35.447249+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -366,7 +366,50 @@
       "enabled_toolsets": null,
       "workdir": null,
       "profile": null
+    },
+    {
+      "id": "aad7d567cf60",
+      "name": "tmux-watcher",
+      "prompt": "Watchdog for tmux sessions Alpha, Beta, Delta, Charlie. Relanches-les si elles n'existent pas.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "tmux-watcher.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "* * * * *",
+        "display": "* * * * *"
+      },
+      "schedule_display": "* * * * *",
+      "repeat": {
+        "times": null,
+        "completed": 379
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-09T05:41:29.478524+00:00",
+      "next_run_at": "2026-06-09T12:01:00+00:00",
+      "last_run_at": "2026-06-09T12:00:35.431914+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6671390917",
+        "chat_name": "Mischael Rad",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
     }
   ],
-  "updated_at": "2026-06-09T00:00:02.488275+00:00"
+  "updated_at": "2026-06-09T12:00:35.452148+00:00"
 }

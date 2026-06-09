@@ -22,18 +22,18 @@ fallback_providers:
 - provider: custom:groq
   model: qwen-qwq-32b
   base_url: https://api.groq.com/openai/v1
-- provider: copilot
-  model: gpt-5-mini
-- provider: copilot
-  model: gpt-4.1-mini
-- provider: copilot
-  model: gpt-4.1
 - provider: mistral
   model: ministral-3b
 - provider: mistral
   model: mistral-small-latest
 - provider: mistral
   model: mistral-medium-3-instruct
+- provider: copilot
+  model: gpt-5-mini
+- provider: copilot
+  model: gpt-4.1-mini
+- provider: copilot
+  model: gpt-4.1
 credential_pool_strategies:
   gemini: fill_first
 toolsets:
@@ -126,7 +126,7 @@ tool_loop_guardrails:
     idempotent_no_progress: 5
 compression:
   enabled: true
-  threshold: 0.10
+  threshold: 0.1
   target_ratio: 0.2
   protect_last_n: 3
   hygiene_hard_message_limit: 400
@@ -639,25 +639,3 @@ mcp_servers:
     - '@doist/todoist-mcp'
     env:
       TODOIST_API_KEY: 03360be2bc62e2b4685c14f08a83fc93eb53b127
-
-# ── Fallback Model ────────────────────────────────────────────────────
-# Automatic provider failover when primary is unavailable.
-# Uncomment and configure to enable. Triggers on rate limits (429),
-# overload (529), service errors (503), or connection failures.
-#
-# Supported providers:
-#   openrouter   (OPENROUTER_API_KEY)  — routes to any model
-#   openai-codex (OAuth — hermes auth) — OpenAI Codex
-#   nous         (OAuth — hermes auth) — Nous Portal
-#   zai          (ZAI_API_KEY)         — Z.AI / GLM
-#   kimi-coding  (KIMI_API_KEY)        — Kimi / Moonshot
-#   kimi-coding-cn (KIMI_CN_API_KEY)   — Kimi / Moonshot (China)
-#   minimax      (MINIMAX_API_KEY)     — MiniMax
-#   minimax-cn   (MINIMAX_CN_API_KEY)  — MiniMax (China)
-#   bedrock      (AWS IAM / boto3)     — AWS Bedrock (Converse API)
-#
-# For custom OpenAI-compatible endpoints, add base_url and key_env.
-#
-# fallback_model:
-#   provider: openrouter
-#   model: anthropic/claude-sonnet-4
