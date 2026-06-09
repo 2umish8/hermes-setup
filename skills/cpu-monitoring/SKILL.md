@@ -4,23 +4,24 @@ description: "Automate CPU usage monitoring via a cron job. Detect spikes above 
 category: devops
 ---
 ## Overview
-- Designed for Linux systems with `ps`, `journalctl`, and `crontab`.
-## Implementation Steps
-- **Script creation** – Build Bash script `monitor-cpu.sh` with absolute paths, `flock` for concurrency.
-- **Make executable** – `chmod +x $HOME/.hermes/.hermes/scripts/monitor-cpu.sh`.
-- **Cron entry** – Add `* * * * * $HOME/.hermes/.hermes/scripts/monitor-cpu.sh` to crontab.
+- Runs a small Bash script on a one‑minute cron schedule.
+- When total CPU usage (sum of all cores) exceeds **≈300 %** it pauses, re‑checks, and if the spike persists it writes the last ten minutes of `journalctl` and the top process to a log file.
+- The log is placed under `~/.hermes/logs/cpu-spike‑<timestamp>.log`.
+- It sends a notification message to the active Hermes session with the path.
 
-## Reference
-- Full Bash script is stored in `references/cpu-spike-monitor.sh`. The executable script resides at `$HOME/.hermes/.hermes/scripts/monitor-cpu.sh`..
-- Script path: `$HOME/.hermes/.hermes/scripts/monitor-cpu.sh`.
+## Implementation
+1. **Script** – `cpu_monitor.sh` placed in `~/.hermes/scripts/`.
+2. **Cron** – `* * * * * ~/.hermes/scripts/cpu_monitor.sh`.
+3. **Permissions** – `chmod +x ~/.hermes/scripts/cpu_monitor.sh`.
 
-1. **Script creation** – Build Bash script using lock file, `flock`, absolute paths.
-2. **Make executable** – `chmod +x ~/.hermes/.hermes/scripts/monitor-cpu.sh`.
-3. **Cron entry** – Add `* * * * * ~/.hermes/.hermes/scripts/monitor-cpu.sh` to crontab.
+## Support Files
+- `references/cpu-spike-monitor.md` – full script source.
+- `references/cpu-monitoring.md` – brief description (kept in the skill for quick reference).
 
 ## Pitfalls & Tips
-- Ensure `journalctl` and `ps` are present; otherwise, the script will fail.
-- The script writes logs under the user’s home; make sure this path exists or it will error.
-- `flock` is used for concurrency control; if unavailable, consider a background guard.
-- Keep threshold (300 %) and wait time (120 s) configurable via env vars for flexibility.
+- Requires `ps`, `journalctl`, and `bc` to be available.
+- The script writes under the user's home; ensure that directory exists.
+- `flock` is omitted here for simplicity; if multiple instances could run concurrently, guard with a lock file.
+- Threshold and cooldown are hard‑coded but can be made environment‑variables (e.g. `CPU_THRESHOLD`, `CPU_COOLDOWN`).
+- Always use absolute paths – e.g. `$HOME/.hermes/logs` – to avoid permission issues in cron.
 ---

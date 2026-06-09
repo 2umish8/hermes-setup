@@ -1,6 +1,6 @@
 ---
 name: cpu-monitoring-script
-description: Automate CPU spike monitoring via a Bash script and cron job.
+description: Automate CPU spike monitoring via a Bash script run by cron, with threshold, wait, log capture, and top process identification, designed to avoid blocking long jobs and to follow cron best practices.
 category: devops
 ---
 

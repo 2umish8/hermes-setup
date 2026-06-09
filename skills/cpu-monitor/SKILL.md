@@ -13,6 +13,8 @@ This umbrella skill automates monitoring of system CPU usage. When total CPU usa
 
 The script is intended to be run as a cron job once per minute.
 
+**Note:** The detection logic has been corrected. Previous versions compared the output of `bc` with `awk`, which evaluated to an empty string. The current version uses `bc -l` output directly: `if [ "$(echo "$CPU_TOTAL2 > 300" | bc -l)" -ne 0 ]; then`, ensuring sustained spikes are reliably detected.
+
 ## How to Use
 1. **Install the script** – Copy the script into `./scripts/check_cpu.sh` and make it executable.
 2. **Add cron entry** – Add the following line to the user’s crontab:
@@ -27,12 +29,12 @@ The script is intended to be run as a cron job once per minute.
 - `ps -eo pcpu` – Calculates total CPU usage.
 - `journalctl --since "10 minutes ago"` – Retrieves recent logs.
 - `ps aux --sort=-%cpu | head -n 2` – Shows the process most consuming CPU.
-Reference script: references/cpu_monitor_script.sh.md
+Reference script: scripts/cpu_monitor.sh
 references/cron_setup.md
 
 * The script outputs a notification via `hermes notify` when a sustained CPU spike is detected. This informs the user immediately without checking log files.
 ` – contains the full Bash script used in this skill.
 
 ## Script
-The script is stored in `/home/hermes/.hermes/scripts/cpu_monitor.sh`.
+The script is stored in `./scripts/cpu_monitor.sh` relative to the skill's directory.
 ---

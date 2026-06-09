@@ -19,3 +19,5 @@ VPS autonomy: 100% autonome. Safety bloque 2× → stop looping, donner config k
 Caddy v2.6.2 is the active reverse proxy on this VPS — owns 80/443, auto Let's Encrypt SSL, config at /etc/caddy/Caddyfile with admin off (needs restart, not reload). Nginx installed but unused. Never suggest Nginx/certbot without checking what's on 80/443 first.
 §
 **Correction**: The memory directory path is `~/.hermes/memory/`, not `~/.hermes/memories/`. The backup script should use the correct path.
+§
+Cron & Agent Scheduler Rule: Never create or enable recurring cron/interval jobs running with a high frequency (e.g., every minute, 5m, 10m) using an LLM agent (`no_agent: false` or default). Spawning agents frequently drains API keys and budgets rapidly. High-frequency jobs MUST use raw script execution (`no_agent: true`).

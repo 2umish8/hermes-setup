@@ -1,26 +1,30 @@
 #!/usr/bin/env bash
-# CPU watchdog script
-# Check total CPU usage across all cores.
-get_total_cpu() {
-  awk 'NR>1{sum+=$1} END {print sum}' <(ps -eo %cpu --no-headers)
+THRESHOLD=300
+
+get_cpu() {
+    ps aux | awk 'NR>1 {sum += $3} END {print sum}'
 }
 
-cpu_total=$(get_total_cpu)
-if (( $(echo "$cpu_total > 300" | bc -l) )); then
-  sleep 120
-  cpu_total2=$(get_total_cpu)
-  if (( $(echo "$cpu_total2 > 300" | bc -l) )); then
-    logfile="/home/hermes/.hermes/logs/cpu-spike-$(date +%Y%m%d%H%M%S).log"
-    mkdir -p "$(dirname "$logfile")"
-    {
-      echo "CPU spike detected at $(date)"
-      echo "Total CPU: ${cpu_total2}%%"
-      echo "Top process:"
-      ps aux --sort=-%cpu | head -n 2
-      echo "Journal logs last 10 minutes:"
-      journalctl --since "10 minutes ago"
-    } > "$logfile"
-    # Notify via Hermes CLI
-    hermes notify "CPU spike detected. Log at $logfile"
-  fi
+# 1. Initial check
+usage=$(get_cpu)
+if (( $(echo "$usage > $THRESHOLD" | bc -l) )); then
+    # 2. Wait 2 minutes
+    sleep 120
+    
+    # 3. Re-check
+    usage_second=$(get_cpu)
+    if (( $(echo "$usage_second > $THRESHOLD" | bc -l) )); then
+        # 4. Spike confirmed - Dump Logs
+        LOG_DIR="/home/hermes/.hermes/logs"
+        mkdir -p "$LOG_DIR"
+        TIMESTAMP=$(date +%Y%m%d%H%M%S)
+        LOG_PATH="$LOG_DIR/cpu-spike-$TIMESTAMP.log"
+        
+        journalctl --since "10 minutes ago" > "$LOG_PATH"
+        
+        echo -e "\n\n--- Top CPU Process ---" >> "$LOG_PATH"
+        ps aux --sort=-%cpu | head -n 2 | tail -n 1 >> "$LOG_PATH"
+        
+        echo "CPU spike detected: $usage_second%. Log created: $LOG_PATH"
+    fi
 fi

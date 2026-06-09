@@ -1,26 +1,31 @@
-# CPU Monitoring Script Details
+# CPU Monitoring Script Reference
 
-This reference documents the key behaviours of the `cpu_monitor.sh` script installed under `/home/hermes/cpu_monitor.sh`.
+This reference contains a concise explanation of the Bash script `cpu_watchdog.sh` that performs rolling CPU spike detection. It is intended for quick on‑the‑fly review by other agents and for future maintenance.
 
-## Core Logic
-1. **Threshold** – The script compares the total CPU utilisation (sum of %CPU across all processes) against `THRESHOLD` which defaults to **300 %**.
-2. **Immediate Check** – If the utilisation is above the threshold, the script waits explicitly for **120 seconds** (2 minutes).
-3. **Re‑check** – After the wait, it recalculates CPU usage. If it is still above the threshold, a log file is generated.
-4. **Log Generation** – The log includes:
-   - Timestamp
-   - Total CPU usage
-   - Top 10 CPU‑consuming processes (`ps aux --sort=-%cpu | head -n 10`)
-   - The last 10 minutes of system journal (`journalctl --since "10 minutes ago"`).
-5. **Persisting** – The log file is stored in `/home/hermes/.hermes/logs/` with a name pattern `cpu-spike-YYYYMMDDHHMMSS.log`.
-6. **Notification** – A syslog entry is written via `logger -t cpu_spike` so system monitoring tools or administrators can catch the spike.
+## Script Overview
+1. **Calculate total CPU usage** – the script runs `ps -eo pcpu` and `awk` to sum all `%CPU` values across processes. The resulting number represents total CPU load percentage across all cores.
+2. **Threshold check** – if the sum exceeds `THRESHOLD` (default 300 %) the spike is considered significant.
+3. **Wait period** – the script sleeps for 120 s (configurable via `sleep <seconds>`). This ensures the spike is sustained, not an isolated spike.
+4. **Re‑check** – the CPU is measured again after the wait period.
+5. **Logging** – if spike persists:
+   - Create `/home/hermes/.hermes/logs` if it does not exist.
+   - Generate a timestamped log file `cpu-spike-<YYYYMMDDHHMMSS>.log`.
+   - Dump the last 10 minutes of `journalctl` output into that file.
+   - Append the top‑CPU‑consuming process (obtained with `ps aux --sort=-%cpu | head -n 2 | tail -n 1`) to the log.
+6. **Syslog notification** – the script writes a concise entry to syslog using `logger -p user.notice`.
 
-## Typical Usage Path
-1. Place script in `/home/hermes/cpu_monitor.sh`.
-2. `chmod +x` it.
-3. Add a per‑user cron line that runs it every minute. Example:
-   ```bash
-   crontab -l | (cat; echo "* * * * * hermes /home/hermes/cpu_monitor.sh >> /dev/null 2>&1") | crontab -
-   ```
-4. Verify operation by temporarily raising the threshold or creating load.
+## Log Format
+```
+
+CPU spike detected. Dumping last 10 minutes of logs to /home/hermes/.hermes/logs/cpu-spike-<timestamp>.log
+Top process causing spike: <PID> <COMMAND>
+
+```
+
+## Customization
+- `THRESHOLD` – change the percentage that triggers the check.
+- `sleep <seconds>` – alter the confirmation wait period.
+- Log directory and filename – can be changed by editing the script.
+- Logger tag – modify the `-p` flag to group syslog entries.
 
 ---

@@ -1,28 +1,23 @@
 #!/usr/bin/env bash
-
-# CPU spike monitoring script
-# Author: Hermes Agent auto-generated
-# Description: Monitors total CPU usage, waits 2 minutes if >300%, dumps last 10 minutes of journalctl logs and notifies the user.
-
-# Compute total CPU usage
-CPU_SUM=$(ps aux --sort=-%cpu | awk '{sum+=$3} END{print sum}')
-
+set -e
+TIMESTAMP=$(date +%Y%m%d%H%M%S)
+LOGDIR="$HOME/.hermes/.hermes/logs"
+mkdir -p "$LOGDIR"
+LOGFILE="$LOGDIR/cpu-spike-$TIMESTAMP.log"
+# total CPU usage
+CPU=$(ps aux | awk '{s+=$3} END {print s}')
+# threshold and delay
 THRESHOLD=300
-if (( $(awk -v cpu="$CPU_SUM" 'BEGIN{print (cpu > ''$THRESHOLD'')}') )); then
-  echo "CPU usage high: $CPU_SUM%, waiting 2 minutes..."
-  sleep 120
-  CPU_SUM2=$(ps aux --sort=-%cpu | awk '{sum+=$3} END{print sum}')
-  if (( $(awk -v cpu="$CPU_SUM2" 'BEGIN{print (cpu > ''$THRESHOLD'')}') )); then
-    NOW=$(date +%Y%m%d%H%M%S)
-    LOGDIR=/home/hermes/.hermes/logs
-    LOGFILE="$LOGDIR/cpu-spike-$NOW.log"
-    mkdir -p "$LOGDIR"
-    TOPPROC=$(ps aux --sort=-%cpu | head -n 2 | tail -n 1)
-    journalctl --since='10 minutes ago' --output=short > "$LOGFILE"
-    echo "CPU spike detected. Top process: $TOPPROC. Log saved to $LOGFILE"
-  else
-    echo "[SILENT]"
+DELAY=120
+if (( $(echo "$CPU > $THRESHOLD" | bc -l) )); then
+  sleep $DELAY
+  CPU2=$(ps aux | awk '{s+=$3} END {print s}')
+  if (( $(echo "$CPU2 > $THRESHOLD" | bc -l) )); then
+    TOP=$(ps aux --sort=-%cpu | head -n 2)
+    JOURNAL=$(journalctl --since="10 minutes ago")
+    echo "CPU Spike Detected: $CPU2%" > "$LOGFILE"
+    echo -e "\nTop Process:\n$TOP" >> "$LOGFILE"
+    echo -e "\n--- Journal Logs (Last 10m) ---\n$JOURNAL" >> "$LOGFILE"
+    echo "CPU spike: $CPU2% logged to $LOGFILE"
   fi
-else
-  echo "[SILENT]"
 fi

@@ -1,22 +1,26 @@
-#!/bin/bash
-# CPU monitor script
-cpu_usage=$(ps aux | awk 'NR>1{sum += $3} END {print sum}')
-threshold=300
-sleep_interval=120
-if (( $(echo "$cpu_usage > $threshold" | bc -l) )); then
-  sleep $sleep_interval
-  cpu_usage=$(ps aux | awk 'NR>1{sum += $3} END {print sum}')
-  if (( $(echo "$cpu_usage > $threshold" | bc -l) )); then
-    logfile="/home/hermes/.hermes/logs/cpu-spike-$(date +%Y%m%d%H%M%S).log"
-    mkdir -p "$(dirname "$logfile")"
-    top_proc=$(ps aux --sort=-%cpu | head -n 2)
-    journal_logs=$(journalctl --since '10 minutes ago')
-    echo "CPU Usage Spike Detected: $cpu_usage%" > "$logfile"
-    echo "Top Process:" >> "$logfile"
-    echo "$top_proc" >> "$logfile"
-    echo "--- Journal Logs (Last 10m) ---" >> "$logfile"
-    echo "$journal_logs" >> "$logfile"
-    echo "ALERT: CPU spike detected ($cpu_usage% ). Logs saved to $logfile. Top process:" >&2
-    echo "$top_proc" >&2
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Calculate total CPU usage (percentage) across all processes
+cpu=$(ps -eo pcpu --no-headers | awk '{sum+=$1} END {print sum}')
+if (( $(echo "$cpu > 300" | bc -l) )); then
+  sleep 120
+  cpu2=$(ps -eo pcpu --no-headers | awk '{sum+=$1} END {print sum}')
+  if (( $(echo "$cpu2 > 300" | bc -l) )); then
+    topprocess=$(ps aux --sort=-%cpu | awk 'NR==2{print $0}')
+    logs=$(journalctl --since "10 minutes ago" -q)
+    logdir="/home/hermes/.hermes/logs"
+    mkdir -p "$logdir"
+    logfile=$logdir/cpu-spike-$(date +%Y%m%d%H%M%S).log
+    {
+      echo "Top process:"
+      echo "$topprocess"
+      echo
+      echo "Last 10 minutes logs:"
+      echo "$logs"
+    } > "$logfile"
+    echo "CPU spike detected. Log saved at $logfile" | hermes notify
+    exit 0
   fi
 fi
+printf "[SILENT]" >/dev/null

@@ -7,6 +7,12 @@ providers:
     base_url: https://api.groq.com/openai/v1
     api_key_env: GROQ_API_KEY
 fallback_providers:
+- provider: gemini
+  model: gemini-2.5-flash-lite
+- provider: gemini
+  model: gemini-3.1-flash-lite
+- provider: gemini
+  model: gemini-2.5-flash
 - provider: custom:groq
   model: llama-3.1-8b-instant
   base_url: https://api.groq.com/openai/v1
@@ -16,12 +22,6 @@ fallback_providers:
 - provider: custom:groq
   model: qwen-qwq-32b
   base_url: https://api.groq.com/openai/v1
-- provider: gemini
-  model: gemini-2.5-flash-lite
-- provider: gemini
-  model: gemini-3.1-flash-lite
-- provider: gemini
-  model: gemini-2.5-flash
 - provider: copilot
   model: gpt-5-mini
 - provider: copilot
@@ -34,12 +34,6 @@ fallback_providers:
   model: mistral-small-latest
 - provider: mistral
   model: mistral-medium-3-instruct
-- provider: openrouter
-  model: openai/gpt-oss-20b
-- provider: openrouter
-  model: google/gemini-2.5-flash-lite
-- provider: openrouter
-  model: deepseek/deepseek-v4-flash
 credential_pool_strategies:
   gemini: fill_first
 toolsets:
@@ -132,7 +126,7 @@ tool_loop_guardrails:
     idempotent_no_progress: 5
 compression:
   enabled: true
-  threshold: 0.15
+  threshold: 0.10
   target_ratio: 0.2
   protect_last_n: 3
   hygiene_hard_message_limit: 400

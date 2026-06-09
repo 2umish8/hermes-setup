@@ -1,9 +1,9 @@
 {
-  "last_report_path": "/home/hermes/.hermes/logs/curator/20260601-200412",
-  "last_run_at": "2026-06-01T20:04:12.768227+00:00",
-  "last_run_duration_seconds": 16.983599,
-  "last_run_summary": "auto: no changes; llm: API call failed after 3 retries: HTTP 404: Gemini returned HTTP 404:",
+  "last_report_path": "/home/hermes/.hermes/logs/curator/20260608-202254",
+  "last_run_at": "2026-06-08T20:22:54.177755+00:00",
+  "last_run_duration_seconds": 38.303031,
+  "last_run_summary": "auto: no changes; llm: no change",
   "last_run_summary_shown_at": "2026-06-01T20:04:12.768227+00:00",
   "paused": false,
-  "run_count": 1
+  "run_count": 2
 }
