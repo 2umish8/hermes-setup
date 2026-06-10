@@ -467,7 +467,7 @@ security:
   tirith_enabled: true
   tirith_path: tirith
   tirith_timeout: 5
-  tirith_fail_open: true
+  tirith_fail_open: false
   website_blocklist:
     enabled: false
     domains: []
@@ -628,9 +628,9 @@ known_plugin_toolsets:
   - spotify
   cli:
   - spotify
-API_SERVER_KEY: mowtif-key-2026
+API_SERVER_KEY: ${API_SERVER_KEY}
 api_server:
-  key: mowtif-key-2026
+  key: ${API_SERVER_KEY}
 mcp_servers:
   todoist:
     command: npx
@@ -638,4 +638,4 @@ mcp_servers:
     - -y
     - '@doist/todoist-mcp'
     env:
-      TODOIST_API_KEY: 03360be2bc62e2b4685c14f08a83fc93eb53b127
+      TODOIST_API_KEY: ${TODOIST_API_KEY}
